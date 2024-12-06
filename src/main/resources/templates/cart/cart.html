@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>カート|たべたべ</title>
+<link rel="stylesheet" href="/demo/css/common.css">
+</head>
+<body>
+<header th:replace="~{common/header :: header}"></header>
+	 <h1>カート</h1>
+
+    <!-- カートに商品がある場合 -->
+    <div th:if="${not #lists.isEmpty(orderSummaryList)}">
+        <table>
+            <thead>
+                <tr>
+                    <th>商品名</th>
+                    <th>数量</th>
+                    <th>単価</th>
+                    <th>合計金額</th>
+                    <th>画像</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="orderSummary : ${orderSummaryList}">
+                    <td th:text="${orderSummary.productName}"></td>
+                    <td th:text="${orderSummary.quantity}"></td>
+                    <td th:text="${orderSummary.unitPrice}"></td>
+                    <td th:text="${orderSummary.quantity * orderSummary.unitPrice}"></td>
+                    <td>
+                        <img th:src="@{/images/product/{imageName}(imageName=${orderSummary.ImageUrl})}" alt="商品画像" width="100">
+                    </td>
+                    <td>
+                        <button>削除</button>  <!-- 商品削除ボタンの実装 -->
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- カートが空の場合 -->
+    <div th:if="${#lists.isEmpty(orderSummaryList)}">
+        <p>カートに商品がありません。</p>
+    </div>
+
+    <!-- 合計金額などの情報 -->
+    <div>
+      
+        <button>注文を確定する</button>
+    </div>
+
+
+</body>
+</html>

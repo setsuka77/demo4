@@ -1,0 +1,78 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.loopSlide {
+	position: relative;
+	display: flex;
+	width: 100vw;
+	overflow: hidden;
+
+	ul {
+		padding: 0;
+		width: 100vw;
+		display: flex;
+		flex-shrink: 0;
+
+		&:first-child {
+			animation: slide1 60s -30s linear infinite;
+		}
+
+		&:last-child {
+			animation: slide2 60s linear infinite;
+		}
+
+		li {
+			display: inline-block;
+			width: 100%;
+			min-width: 150px;
+			margin-right: 20px;
+			list-style: none;
+			text-align: center;
+
+			img {
+				display: block;
+				width: 100%;
+				height: auto;
+			}
+		}
+	}
+
+	&:hover {
+		ul {
+			animation-play-state: paused;
+		}
+	}
+}
+
+@keyframes slide1 {
+	0% {
+		transform: translateX(100%);
+	}
+
+	to {
+		transform: translateX(-100%);
+	}
+}
+
+@keyframes slide2 {
+	0% {
+		transform: translateX(0);
+	}
+
+	to {
+		transform: translateX(-200%);
+	}
+}

@@ -1,0 +1,163 @@
+/* 商品一覧のコンテナ */
+.product-list {
+    display: flex; /* 横並びに設定 */
+    flex-wrap: wrap; /* 複数行に折り返しを許可 */
+    gap: 20px; /* 商品間の隙間 */
+    justify-content: center; /* 中央寄せ */
+    padding: 20px;
+}
+
+/* 商品カード */
+.product-card {
+    display: flex;
+    flex-direction: column; /* 縦並びにする */
+    width: 250px; /* カードの幅 */
+    border: 1px solid #ccc; /* ボーダー */
+    border-radius: 8px; /* 角を丸く */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* シャドウ */
+    background-color: #fff; /* 背景色 */
+    padding: 10px;
+    text-align: center; /* テキストの中央寄せ */
+    height: 100%; /* 高さを親要素に合わせる */
+    display: flex;
+    flex-direction: column; /* 縦並びにする */
+}
+
+/* topセクション（商品名や説明） */
+.top {
+    flex-grow: 1; /* 商品名と商品説明が変動しても、top部分がスペースを占める */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* 商品画像 */
+.product-card img {
+    width: 100%; /* 画像をカード幅に合わせる */
+    height: auto; /* 高さは自動調整 */
+    border-radius: 4px; /* 画像を角丸に */
+}
+
+/* 商品名 */
+.product-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #333;
+}
+
+/* 商品説明 */
+.product-description {
+    padding: 9px;
+    color: #4b4a4a;
+    font-size: 14px;
+    white-space: nowrap; /* 改行を防ぐ */
+    overflow: hidden; /* 溢れた部分を隠す */
+    text-overflow: ellipsis; /* 省略記号を表示 */
+    max-width: 100%; /* 必要に応じて幅を調整 */
+}
+
+/* ツールチップの表示設定 */
+.product-description:hover {
+    white-space: normal; /* ホバー時に改行して全文を表示 */
+    overflow: visible; /* 溢れた部分を表示 */
+    text-overflow: unset; /* 省略記号を解除 */
+}
+
+/* 商品説明の詳細（ツールチップの表示） */
+.product-description[title]:hover {
+    text-decoration: underline;
+}
+
+/* bottomセクション（価格、ステッパー、ボタン） */
+.bottom {
+    margin-top: auto; /* 下に配置 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 各要素の間隔 */
+}
+
+/* 価格 */
+.price {
+    font-size: 16px;
+    color: #dd4450;
+}
+
+/* ステッパー（数量変更ボタン） */
+.stepper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.stepper button {
+    width: 22%;
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 7px;
+}
+
+.stepper-input {
+    width: 60px;
+    text-align: center;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* カートに入れるボタン */
+.button {
+    background-color: #ff6f00; /* オレンジ色 */
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 25px;
+    width: 100%; /* ボタンをカードの幅に合わせる */
+}
+
+.button:hover {
+    background-color: #ff8c00; /* ホバー時の色 */
+}
+
+.cart-notification {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ff6f00; /* 成功を示すグリーン */
+    color: white;
+    padding: 15px 25px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 9999; /* 最前面に表示 */
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.cart-notification.show {
+    opacity: 1;
+}
+
+.cart-notification.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .product-card {
+        width: 100%; /* スマホなど小さい画面では横幅100%にする */
+        margin: 10px 0; /* 上下の余白 */
+    }
+    .product-description {
+        width: 90%; /* 小さい画面では少し広めに */
+        font-size: 13px; /* フォントサイズを少し小さく */
+    }
+}

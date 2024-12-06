@@ -1,0 +1,54 @@
+<!-- src/main/resources/templates/mainMenu/index.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>ホーム画面|たべたべ</title>
+	<link rel="stylesheet" href="/demo/css/common.css">
+	<link rel="stylesheet" href="/demo/css/menu.css">
+</head>
+
+<body>
+	<header th:replace="~{common/header :: header}"></header>
+	<img src="images/foods.jpg" alt="画像がないぞう" class="foodHeader">
+	<!-- セッションリセットボタン -->
+	<form th:action="@{/resetSession}" method="post">
+		<button type="submit">セッションリセット</button>
+	</form>
+
+
+	<h2>まんぷく食堂</h2>
+
+	<div>
+		<h3>◇本日のmenu◇</h3>
+		<ul>
+			<li th:each="category : ${categories}">
+				<a th:href="@{/category/branch/{id}(id=${category.categoryId})}" th:text="${category.categoryName}"></a>
+			</li>
+
+		</ul>
+	</div>
+
+
+
+	<div class="loopSlide">
+		<ul>
+			<li><img src="images/cake.jpg"></li>
+			<li><img src="images/don.jpg"></li>
+			<li><img src="images/niku.jpg"></li>
+			<li><img src="images/pan.jpg"></li>
+			<li><img src="images/sushi.jpg"></li>
+		</ul>
+		<ul>
+			<li><img src="images/cake.jpg"></li>
+			<li><img src="images/don.jpg"></li>
+			<li><img src="images/niku.jpg"></li>
+			<li><img src="images/pan.jpg"></li>
+			<li><img src="images/sushi.jpg"></li>
+		</ul>
+	</div>
+
+</body>
+
+</html>

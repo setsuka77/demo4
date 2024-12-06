@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<!-- Spring Bootの親POMを指定することで、デフォルト設定を継承 -->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.4.0</version>
+		<relativePath /> <!-- リポジトリから親POMを参照 -->
+	</parent>
+	
+	<!-- プロジェクトの基本情報 -->
+	<groupId>com.example</groupId> <!-- パッケージ構成を識別するグループID -->
+	<artifactId>demo4</artifactId> <!-- プロジェクトの一意なアーティファクトID -->
+	<version>0.0.1-SNAPSHOT</version> <!-- バージョン情報 -->
+	<name>demo4</name> <!-- プロジェクト名 -->
+	<description>Demo project for Spring Boot</description> <!-- プロジェクトの説明 -->
+
+	<!-- URLやライセンス情報などのメタデータ -->
+	<url /> <!-- プロジェクトの公式URL（未設定） -->
+	<licenses>
+		<license /> <!-- 使用するライセンス（未設定） -->
+	</licenses>
+	<developers>
+		<developer /> <!-- 開発者情報（未設定） -->
+	</developers>
+	<scm>
+		<connection /> <!-- ソースコード管理リポジトリへの接続URL（未設定） -->
+		<developerConnection /> <!-- 開発者向け接続URL（未設定） -->
+		<tag /> <!-- SCMタグ（未設定） -->
+		<url /> <!-- リポジトリURL（未設定） -->
+	</scm>
+	<!-- プロジェクトで使用するプロパティを定義 -->
+	<properties>
+		<java.version>21</java.version> <!-- 使用するJavaのバージョンを指定 -->
+	</properties>
+	
+	<dependencies>
+		<!-- Spring Boot Starter Data JDBC -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jdbc</artifactId>
+		</dependency>
+
+		<!-- Spring Boot Starter JDBC -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		</dependency>
+
+		<!-- Thymeleaf -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
+		<!-- Spring Boot Starter Web -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Spring Boot Devtools -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Spring Boot Starter Validation -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+
+		<!-- Lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+
+		<!-- MySQL Connector -->
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- MyBatis Spring Boot Starter -->
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+
+		<!-- MyBatis -->
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+			<version>3.5.10</version>
+		</dependency>
+
+		<!-- Spring Boot Starter Test -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Spring Boot Starter -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+		
+	
+	</build>
+
+</project>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>商品一覧|たべたべ</title>
+	<link rel="stylesheet" href="/demo/css/common.css">
+	<link rel="stylesheet" href="/demo/css/category.css">
+</head>
+
+<body>
+	<header th:replace="~{common/header :: header}"></header>
+	<!-- メッセージ表示部分 -->
+	<div th:if="${message}" class="cart-notification">
+		<p th:text="${message}"></p>
+	</div>
+
+	<div class="product-list">
+		<!-- GoodsFormのリストをループ処理 -->
+		<div th:each="goodForm, iterStat : ${goodsForm.goodsFormList}" class="product-card">
+			<form th:action="@{/category/branch}" method="post" id="branch-form" th:object="${goodsForm}">
+
+				<div class="top">
+					<img th:src="@{/images/product/{imageName}(imageName=${goodForm.imageUrl})}" alt="商品画像">
+					<p class="product-name" th:text="${goodForm.productName}"></p>
+					<p class="product-description" th:text="${goodForm.description}" th:title="${goodForm.description}">
+					</p>
+				</div>
+				<div class="bottom">
+					<p class="price" th:text="${goodForm.price}" th:data-original-price="${goodForm.price}"></p>
+					<!-- productIdを隠しフィールドとして送信 -->
+					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].price}" />
+					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].productId}" />
+					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].categoryId}" />
+					<!-- quantity入力欄とステッパーボタン -->
+					<div class="stepper">
+						<button type="button" class="decrement">ー</button>
+						<input type="number" th:field="*{goodsFormList[__${iterStat.index}__].quantity}" value="1"
+							min="0" class="stepper-input" readonly>
+						<button type="button" class="increment">＋</button>
+					</div>
+				</div>
+				<!-- カートに入れるボタン -->
+				<button type="submit" id="cart" name="cart" class="button">カートに入れる</button>
+
+			</form>
+		</div>
+	</div>
+
+	<script>
+		// メッセージ表示
+		window.onload = function () {
+			const notification = document.querySelector('.cart-notification');
+
+			if (notification) {
+				notification.classList.add('show');
+
+				// 3秒後に通知を消す
+				setTimeout(function () {
+					notification.classList.remove('show');
+				}, 1000);
+			}
+		};
+
+
+		// すべての価格要素を取得
+		const prices = document.querySelectorAll('.price');
+
+		// 各価格をフォーマット
+		prices.forEach(priceElement => {
+			const originalPrice = priceElement.getAttribute('data-original-price');
+			const formattedPrice = new Intl.NumberFormat('ja-JP', {
+				style: 'currency',
+				currency: 'JPY'
+			}).format(originalPrice);
+			priceElement.textContent = formattedPrice; // 表示を更新
+		});
+
+
+		// ステッパーのイベント処理
+		document.querySelectorAll('.stepper').forEach(stepper => {
+			const input = stepper.querySelector('.stepper-input');
+			const incrementButton = stepper.querySelector('.increment');
+			const decrementButton = stepper.querySelector('.decrement');
+
+			incrementButton.addEventListener('click', (event) => {
+				event.preventDefault(); // デフォルト動作を無効化
+				const max = parseInt(input.getAttribute('max')) || Infinity;
+				const step = parseInt(input.getAttribute('step')) || 1;
+				const value = parseInt(input.value) || 0;
+
+				if (value + step <= max) {
+					input.value = value + step;
+				}
+			});
+
+			decrementButton.addEventListener('click', (event) => {
+				event.preventDefault(); // デフォルト動作を無効化
+				const min = parseInt(input.getAttribute('min')) || 0;
+				const step = parseInt(input.getAttribute('step')) || 1;
+				const value = parseInt(input.value) || 0;
+
+				if (value - step >= min) {
+					input.value = value - step;
+				}
+			});
+		});
+	</script>
+
+</body>
+
+</html>

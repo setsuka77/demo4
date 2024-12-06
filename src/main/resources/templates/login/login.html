@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>ログイン|たべたべ</title>
+	<link rel="stylesheet" href="/demo/css/login.css">
+</head>
+
+<body>
+	<div class="login-container">
+		<h2>ログイン画面</h2>
+		<form th:action="@{/login/login}" method="post">
+			<div class="logintext">
+				<label for="id">ユーザーID：</label>
+				<input type="text" id="id" name="id" required>
+			</div>
+
+			<div class="logintext">
+				<label for="pass">パスワード：</label>
+				<input type="password" id="pass" name="pass" required>
+			</div>
+
+			<button type="submit" name="login">ログイン</button>
+
+			<div class="separator"></div> <!-- 区切り線 -->
+
+			<a th:href="@{/login/record}">アカウントを作成する</a>
+		</form>
+
+		<div th:if="${error}" class="error" role="alert">
+			<p th:utext="${error}"></p>
+		</div>
+	</div>
+</body>
+
+</html>

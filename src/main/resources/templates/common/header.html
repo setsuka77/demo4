@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>共通ヘッダー</title>
+</head>
+
+<body>
+	<header th:fragment="header">
+		<a th:href="@{/}" >
+		<img src="/demo/images/logo.png" class="logo">
+		</a>
+
+		<div class="right">
+			<!-- ユーザー情報（ログイン済みの場合） -->
+			<div th:if="${user != null}">
+				<div th:object="${user}"  class="user">
+					ユーザーID:<span th:text="*{id}"></span>
+					ユーザー名:<span th:text="*{name}"></span>
+				</div>
+			</div>
+
+			<!-- ログイン/アカウント作成リンク（未ログインの場合） -->
+			<div th:unless="${user != null}" class="login">
+				<a th:href="@{/login/login}">
+					<button type="button">ログイン</button>
+				</a>
+				<a th:href="@{/login/record}">アカウントを作成する</a>
+			</div>
+
+			<!-- カート -->
+			<a th:unless="${isCartPage}" th:href="@{/cart/cart}" >
+				<img src="/demo/images/cart.png" class="cart">
+				 <span th:if="${totalItems > 0}" class="cart-item-count" th:text="${totalItems}"></span>
+			</a>
+		</div>
+
+
+	</header>
+</body>
+
+</html>

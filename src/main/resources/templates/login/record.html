@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ユーザー登録|たべたべ</title>
+<link rel="stylesheet" href="/demo/css/login.css">
+</head>
+<body>
+	<div class="login-container">
+		<h2>ユーザー登録画面</h2>
+		<form th:action="@{/login/record}" method="post">
+			<div class="logintext">
+				ユーザーID：<input type="text" id="id" name="id">
+				ユーザーname：<input type="text" id="name" name="name">
+				パスワード：<input type="password" id="pass" name="pass">
+			</div>
+			<button type="submit" name="record" >登録</button>
+		</form>
+
+		<div th:if="${error}" class="error" role="alert">
+			<p th:utext="${error}"></p>
+		</div>
+
+	</div>
+
+</body>
+</html>

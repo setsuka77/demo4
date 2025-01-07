@@ -6,8 +6,10 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import com.example.demo.entity.OrderSummary;
+import com.example.demo.entity.Cart;
 import com.example.demo.entity.Users;
 import com.example.demo.service.GuestService;
 import com.example.demo.service.UsersService;
@@ -24,23 +26,44 @@ public class PurchaseController {
 		this.guestService = guestService;
 	}
 
-	
+	//カート画面表示
 	@GetMapping("/cart/cart")
 	public String showCart(Model model, HttpSession session) {
-		List<OrderSummary> orderSummaryList = new ArrayList<>();
+		List<Cart> cartList = new ArrayList<>();
 		Users loginUser = (Users) session.getAttribute("user");
 
         // ゲストユーザーとログインユーザーの処理を分ける
         if (loginUser != null) {
-            orderSummaryList = usersService.getCart(session);
+            cartList = usersService.getCart(session);
             model.addAttribute("user", loginUser);
         } else {
-            orderSummaryList = guestService.getCart(session);
+            cartList = guestService.getCart(session);
         }
-		System.out.println(orderSummaryList);
-		model.addAttribute("orderSummaryList", orderSummaryList);
+		model.addAttribute("cartList", cartList);
 		model.addAttribute("isCartPage", true);
 		return "cart/cart";
 	}
+	
+	//削除ボタン押下
+	@PostMapping(path="/cart/cart")
+	public String deleatCart(Model model,HttpSession session,@RequestParam("productId") Integer productId) {
+		List<Cart> cartList = new ArrayList<>();
+		Users loginUser = (Users) session.getAttribute("user");
+		System.out.println("商品ID"+productId);
+		
+		// ゲストユーザーとログインユーザーの処理を分ける
+        if (loginUser != null) {
+        	cartList = usersService.deleteItem(productId,session);
+            model.addAttribute("user", loginUser);
+        } else {
+        	cartList = guestService.deleteItem(productId,session);
+        }
+		model.addAttribute("cartList", cartList);
+		model.addAttribute("isCartPage", true);		
+		return "cart/cart";
+	}
+	
+	
+	
 
 }

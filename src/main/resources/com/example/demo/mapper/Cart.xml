@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.CartMapper">
+	<select id="getTotalItemsForUser" parameterType="int"
+		resultType="int">
+		SELECT SUM(quantity)
+		FROM cart
+		WHERE user_id = #{userId}
+	</select>
+
+	<update id="updateCart"
+		parameterType="com.example.demo.entity.Cart">
+		UPDATE cart
+		SET quantity = #{quantity}
+		WHERE product_id =
+		#{productId}
+		AND user_id = #{userId};
+	</update>
+
+	<select id="cartCheck" resultType="com.example.demo.entity.Cart">
+		SELECT
+		cart.id,
+		cart.product_id,
+		cart.quantity,
+		cart.unit_price,
+		cart.user_id,
+		g.product_name,
+		g.image_url,
+		sm.stock_quantity,
+		sm.stock_quantity >=
+		cart.quantity AS
+		is_stock_available
+		FROM
+		cart
+		INNER JOIN
+		goods g
+		ON
+		cart.product_id = g.product_id
+		INNER
+		JOIN
+		stock_management
+		sm
+		ON
+		cart.product_id = sm.product_id
+		WHERE
+		cart.user_id
+		= #{userId};
+	</select>
+
+	<insert id="addCart"
+		parameterType="com.example.demo.entity.Cart">
+		INSERT INTO cart(product_id, quantity,
+		unit_price,
+		user_id)
+		VALUES(#{productId}, #{quantity},
+		#{unitPrice}, #{userId})
+	</insert>
+
+	<delete id="deleteCart" parameterType="map">
+		DELETE FROM cart
+		WHERE user_id = #{userId}
+		AND product_id = #{productId}
+	</delete>
+
+
+</mapper>

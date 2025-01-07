@@ -7,14 +7,32 @@
 		resultType="com.example.demo.dto.GoodsDto">
 		SELECT * FROM goods WHERE category_id = #{id}
 	</select>
-	
-	 <select id="getProductsByIds" resultType="com.example.demo.entity.Goods">
-        SELECT * FROM goods
-        WHERE product_id IN
-        <foreach item="id" collection="list" open="(" close=")" separator=",">
-            #{id}
-        </foreach>
-    </select>
 
-    
+	<select id="getProductsByIds"
+		resultType="com.example.demo.entity.Goods">
+		SELECT
+		g.product_id,
+		g.product_name,
+		g.price,
+		g.description,
+		g.created_at,
+		g.updated_at,
+		g.image_url,
+		g.category_id,
+		sm.stock_quantity
+		FROM
+		goods g
+		INNER JOIN
+		stock_management sm ON g.product_id = sm.product_id
+		WHERE
+		g.product_id IN
+		<foreach item="id" collection="list" open="(" close=")"
+			separator=",">
+			#{id}
+		</foreach>
+	</select>
+
+
+
+
 </mapper>

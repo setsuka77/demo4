@@ -39,10 +39,8 @@ public class MainMenuController {
 		if (loginUser != null) {
 			model.addAttribute("user", loginUser);
 		}
+		//カート合計
 		Integer totalItems = (Integer) session.getAttribute("totalItems");
-		if (totalItems == null) {
-		    totalItems = 0; // null の場合は 0 に初期化
-		}
 		model.addAttribute("totalItems", totalItems);
 		// カテゴリーのセッションをリセット
 		session.removeAttribute("goodsForm");
@@ -50,12 +48,13 @@ public class MainMenuController {
 	}
 	
 	
+	//セッションリセットボタン押下処理
 	@PostMapping("/resetSession")
     public String resetSession(HttpSession session, RedirectAttributes redirectAttributes) {
         // セッションを無効化してリセット
         session.invalidate();
-        // セッションリセット後にリダイレクトするページ
-        return "redirect:/";  // 例えばトップページにリダイレクト
+       
+        return "redirect:/"; 
     }
 	
 }

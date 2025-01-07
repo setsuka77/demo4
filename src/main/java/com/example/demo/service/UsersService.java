@@ -1,18 +1,19 @@
 package com.example.demo.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.entity.Cart;
 import com.example.demo.entity.Goods;
-import com.example.demo.entity.OrderSummary;
 import com.example.demo.entity.Users;
 import com.example.demo.form.GoodForm;
 import com.example.demo.form.GoodsForm;
+import com.example.demo.mapper.CartMapper;
 import com.example.demo.mapper.GoodsMapper;
 import com.example.demo.mapper.OrderSummaryMapper;
 import com.example.demo.repository.ItemRepository;
@@ -22,8 +23,9 @@ import jakarta.servlet.http.HttpSession;
 @Service
 public class UsersService implements ItemRepository {
 
-	private final OrderSummaryMapper orderSummaryMapper;
+	//private final OrderSummaryMapper orderSummaryMapper;
 	private final GoodsMapper goodsMapper;
+	private final CartMapper cartMapper;
 
 	// 商品IDを指定して、商品をリストから探すメソッド
 	private Goods findProductById(List<Goods> products, Integer productId) {
@@ -35,119 +37,137 @@ public class UsersService implements ItemRepository {
 		return null; // 商品が見つからなければnullを返す
 	}
 
-	public UsersService(OrderSummaryMapper orderSummaryMapper, GoodsMapper goodsMapper) {
-		this.orderSummaryMapper = orderSummaryMapper;
-		this.goodsMapper = goodsMapper;
+	//リストに商品があるとき更新
+	private void updateCartQuantity(Cart existingItem, int quantityToAdd) {
+		existingItem.setQuantity(existingItem.getQuantity() + quantityToAdd);
+		cartMapper.updateCart(existingItem); // カート情報を更新
 	}
 
+	//新規登録
+	private void addNewItemToCart(Integer userId, GoodForm submit) {
+		Cart newItem = new Cart();
+		newItem.setProductId(submit.getProductId());
+		newItem.setUnitPrice(submit.getPrice());
+		newItem.setQuantity(submit.getQuantity());
+		newItem.setUserId(userId);
+		cartMapper.addCart(newItem); // カートに新規追加
+	}
+
+	public UsersService(OrderSummaryMapper orderSummaryMapper, GoodsMapper goodsMapper, CartMapper cartMapper) {
+		//this.orderSummaryMapper = orderSummaryMapper;
+		this.goodsMapper = goodsMapper;
+		this.cartMapper = cartMapper;
+	}
+
+	//カートに追加
 	@Override
 	@Transactional
 	public int addCart(GoodsForm goodsForm, HttpSession session) {
 		// ユーザー情報の取得
 		Users loginUser = (Users) session.getAttribute("user");
 		Integer userId = loginUser.getId();
+
 		// フォームデータから商品リストを取得
 		List<GoodForm> submitList = goodsForm.getGoodsFormList();
-		// 既存のカート情報を取得
-		List<OrderSummary> existingCart = orderSummaryMapper.cartCheck(userId);
 
+		// 既存カート情報を取得
+		List<Cart> existingCart = cartMapper.cartCheck(userId);
+		Map<Integer, Cart> existingCartMap = existingCart.stream()
+				.collect(Collectors.toMap(Cart::getProductId, item -> item));
+
+		// カートに商品の追加または数量の更新
 		for (GoodForm submit : submitList) {
 			if (submit.getQuantity() != null && submit.getQuantity() > 0) {
-				boolean found = false;
+				Cart existingItem = existingCartMap.get(submit.getProductId());
 
-				// 既存カートに同じ商品が存在するか確認
-				for (OrderSummary existingItem : existingCart) {
-					if (existingItem.getProductId().equals(submit.getProductId())) {
-						// 既存のカートに同じ商品があれば数量を加算
-						existingItem.setQuantity(existingItem.getQuantity() + submit.getQuantity());
-						orderSummaryMapper.updateCart(existingItem); // カート情報を更新
-						found = true;
-						break;
-					}
-				}
-				// 同じ商品がカートにない場合、新規追加
-				if (!found) {
-					OrderSummary newItem = new OrderSummary();
-					newItem.setProductId(submit.getProductId());
-					newItem.setUnitPrice(submit.getPrice());
-					newItem.setQuantity(submit.getQuantity());
-					newItem.setUserId(userId);
-					newItem.setUseFlag(false); // 必要に応じて設定
-					orderSummaryMapper.addCart(newItem); // カートに新規追加
+				if (existingItem != null) {
+					// 既存のカートに同じ商品があれば数量を加算
+					updateCartQuantity(existingItem, submit.getQuantity());
+				} else {
+					// 同じ商品がカートにない場合、新規追加
+					addNewItemToCart(userId, submit);
 				}
 			}
 		}
 		// ユーザーのカートに入っている商品数を返す
-		return orderSummaryMapper.getTotalItemsForUser(userId);
+		return cartMapper.getTotalItemsForUser(userId);
 	}
 
+	//カート情報を表示
 	@Override
 	@Transactional
-	public List<OrderSummary> getCart(HttpSession session) {
-		List<OrderSummary> orderSummaryList = new ArrayList<>();
-		//カート情報を取得する
-		Map<Integer, Integer> cart = (Map<Integer, Integer>) session.getAttribute("guestCart");
-		System.out.println("セッションから取得" + cart);
+	public List<Cart> getCart(HttpSession session) {
+		// ユーザー情報の取得
+		Users loginUser = (Users) session.getAttribute("user");
+		Integer userId = loginUser.getId();
 
-		// guestCartのnullチェック
+		//セッションからカート情報を取得する
+		Map<Integer, Integer> cart = (Map<Integer, Integer>) session.getAttribute("guestCart");
 		if (cart != null) {
 			// cartからproductIdを取り出してリストにする
 			List<Integer> productIds = new ArrayList<>(cart.keySet());
 			// 商品情報をデータベースから取得
 			List<Goods> products = goodsMapper.getProductsByIds(productIds);
-			for (Integer productId : productIds) {
-				// 商品情報を取得
+
+			//既存カート情報を取得
+			List<Cart> existingCart = cartMapper.cartCheck(userId);
+			Map<Integer, Cart> existingCartMap = existingCart.stream()
+					.collect(Collectors.toMap(Cart::getProductId, item -> item));
+
+			// 新規アイテムを格納するリストと更新リスト
+			List<Cart> itemsToUpdate = new ArrayList<>();
+			List<Cart> itemsToInsert = new ArrayList<>();
+
+			for (Map.Entry<Integer, Integer> entry : cart.entrySet()) {
+				Integer productId = entry.getKey();
+				Integer quantity = entry.getValue();
 				Goods product = findProductById(products, productId);
+
 				if (product != null) {
-					Integer quantity = cart.get(productId); // カートの数量を取得
+					// DBにアイテムが存在するか確認
+					Cart existingItem = existingCartMap.get(productId);
 
-					// OrderSummaryにまとめる
-					OrderSummary orderSummary = new OrderSummary();
-					orderSummary.setProductId(productId);
-					orderSummary.setQuantity(quantity);
-					orderSummary.setUnitPrice(product.getPrice());
-					orderSummary.setProductName(product.getProductName());
-					orderSummary.setImageUrl(product.getImageUrl());
-					orderSummary.setUseFlag(false); // 必要に応じて設定
-
-					System.out.println("セッションからリスト作成" + orderSummary);
-					// 作成したOrderSummaryをリストに追加
-					orderSummaryList.add(orderSummary);
+					if (existingItem != null) {
+						// 既存アイテムがあれば、数量を更新するリストに追加
+						existingItem.setQuantity(existingItem.getQuantity() + quantity);
+						itemsToUpdate.add(existingItem);
+					} else {
+						// 新規アイテムの場合、挿入リストに追加
+						Cart newItem = new Cart();
+						newItem.setProductId(productId);
+						newItem.setQuantity(quantity);
+						newItem.setUnitPrice(product.getPrice());
+						newItem.setUserId(userId);
+						itemsToInsert.add(newItem);
+					}
 				}
 			}
-		}
 
+			// 一件ずつ更新を行う
+			for (Cart itemToUpdate : itemsToUpdate) {
+				cartMapper.updateCart(itemToUpdate); 
+			}
+			// 一件ずつ挿入を行う
+			for (Cart itemToInsert : itemsToInsert) {
+				cartMapper.addCart(itemToInsert); 
+			}
+			// セッションからゲストカートを削除
+			session.removeAttribute("guestCart");
+		}
+		return cartMapper.cartCheck(userId); // 最終的にユーザーのカート情報を返す
+	}
+
+	//カート削除
+	@Transactional
+	@Override
+	public List<Cart> deleteItem(Integer id, HttpSession session) {
 		// ユーザー情報の取得
 		Users loginUser = (Users) session.getAttribute("user");
-		// DBからのカート情報を取得
-		List<OrderSummary> dbCart = orderSummaryMapper.cartCheck(loginUser.getId());
-		System.out.println("dbから取得" + dbCart);
-		// DBカートが存在する場合
-	    if (dbCart != null) {
-	        // セッションのカート情報をMapに変換
-	        Map<Integer, OrderSummary> orderSummaryMap = new HashMap<>();
-	        for (OrderSummary orderSummary : orderSummaryList) {
-	            orderSummaryMap.put(orderSummary.getProductId(), orderSummary);
-	        }
-
-	        // DBカートとセッションカートをマージ
-	        for (OrderSummary dbOrderSummary : dbCart) {
-	            OrderSummary orderSummary = orderSummaryMap.get(dbOrderSummary.getProductId());
-	            if (orderSummary != null) {
-	                // 同じ商品があれば数量を加算
-	                orderSummary.setQuantity(orderSummary.getQuantity() + dbOrderSummary.getQuantity());
-	                // DBで更新
-	                orderSummaryMapper.updateCart(orderSummary);
-	            } else {
-	                // 同じ商品がなければ、新規に追加
-	                orderSummaryMapper.addCart(dbOrderSummary);
-	                orderSummaryList.add(dbOrderSummary);
-	            }
-	        }
-	    }
-		System.out.println("DBに保存する完成形" + orderSummaryList);
-
-		return orderSummaryList;
+		Integer userId = loginUser.getId();
+		//DB物理削除
+		cartMapper.deleteCart(userId,id);
+		
+		return cartMapper.cartCheck(userId); // 最終的にユーザーのカート情報を返す
 	}
 
 }

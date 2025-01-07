@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import com.example.demo.entity.Users;
 import com.example.demo.form.UserForm;
+import com.example.demo.mapper.CartMapper;
 import com.example.demo.mapper.UsersMapper;
 
 import jakarta.servlet.http.HttpSession;
@@ -15,9 +16,11 @@ import jakarta.servlet.http.HttpSession;
 public class loginController {
 	
 	private final UsersMapper usersMapper;
+	private final CartMapper cartMapper;
 	
-	public loginController(UsersMapper usersMapper) {
+	public loginController(UsersMapper usersMapper,CartMapper cartMapper) {
 		this.usersMapper=usersMapper;
+		this.cartMapper = cartMapper;
 	}
 	
 	/**
@@ -36,12 +39,12 @@ public class loginController {
 	public String login(HttpSession session,UserForm userForm,Model model) {
 		Integer id = userForm.getId();
 		String pass = userForm.getPass();
-		System.out.println("パス確認"+pass);
 		Users user = usersMapper.findUser(id);
-		System.out.println(user);
-		
 		if(user!= null && user.getPass().equals(pass)) {
 			session.setAttribute("user",user);
+			//カート合計検索
+			Integer totalItems = cartMapper.getTotalItemsForUser(id);
+			session.setAttribute("totalItems", totalItems);
 			}
 		else {
 			model.addAttribute("error", "ユーザーID、パスワードが間違ってます");

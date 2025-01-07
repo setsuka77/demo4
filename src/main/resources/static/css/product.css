@@ -1,0 +1,86 @@
+@charset "UTF-8";
+.cart-item-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.cart-item-image img {
+    max-width: 100px;
+    max-height: 100px;
+}
+
+.cart-item-details {
+    flex-grow: 1;
+    padding: 0 20px;
+}
+
+.cart-item-name {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.cart-item-price {
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.cart-item-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.stepper button {
+    background-color: #df6f34;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 11px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #ef844b;
+}
+
+input.stepper-input{
+	width: 45px;
+}
+
+.dialog-content {
+	text-align: center;
+}
+
+.dialog-content p{
+	margin-bottom: 15px;
+}
+
+/* モーダルの設定*/
+.dialog {
+	position: fixed; /* 画面に固定する */
+    top: 50%; /* 画面の縦中央 */
+    left: 50%; /* 画面の横中央 */
+    transform: translate(-50%, -50%); /* 自身のサイズ分中央に調整 */
+    width: 600px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    border: 2px solid rgb(93, 93, 93);
+    border-radius: 15px;
+}
+
+/* モーダルの中身の設定*/
+.dialog-comment {
+	border: 1px solid rgb(93, 93, 93);
+	/* ボーダーを設定 */
+}
+

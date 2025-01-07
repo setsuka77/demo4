@@ -48,6 +48,7 @@ public class ItemController {
 		this.guestService = guestService;
 	}
 
+	//商品一覧表示
 	@GetMapping("/category/branch/{id}")
 	public String showBranch(HttpSession session, @PathVariable Integer id, Model model) {
 		// ユーザー情報の取得
@@ -59,25 +60,18 @@ public class ItemController {
 		//商品情報取得
 		GoodsForm goodsForm = new GoodsForm();
 		List<GoodsDto> pro = goodsMapper.findProductById(id);
-		if (pro == null || pro.isEmpty()) {
-			System.out.println("カテゴリーID " + id + " に一致する商品が見つかりませんでした。");
-		} else {
-			System.out.println("カテゴリーID " + id + " に一致する商品数: " + pro.size());
-		}
-
 		goodsForm.setGoodsFormList(convertToGoodFormList(pro));
 		model.addAttribute("goodsForm", goodsForm);
+		//カート押下後にも商品を表示できるようにするため
 		session.setAttribute("goodsForm", goodsForm);
 
 		Integer totalItems = (Integer) session.getAttribute("totalItems");
-		if (totalItems == null) {
-			totalItems = 0; // null の場合は 0 に初期化
-		}
 		model.addAttribute("totalItems", totalItems);
 
 		return "category/branch";
 	}
 
+	
 	//「カートに入れる」ボタン押下
 	@PostMapping(path = "/category/branch", params = "cart")
 	public String addCart(HttpSession session, Model model, GoodsForm submitForm) {
@@ -86,9 +80,8 @@ public class ItemController {
 		if (loginUser != null) {
 			model.addAttribute("user", loginUser);
 		}
-		System.out.println("ゲスト" + submitForm);
 
-		int totalItems = 0;
+		Integer totalItems = 0;
 		//カート追加
 		if (loginUser != null) {
 			totalItems = usersService.addCart(submitForm, session);
@@ -97,8 +90,7 @@ public class ItemController {
 		}
 		String message = "カートに商品が追加されました";
 		model.addAttribute("message", message);
-		System.out.println("カートボタン押下" + totalItems);
-
+		//カート合計
 		session.setAttribute("totalItems", totalItems);
 		model.addAttribute("totalItems", totalItems);
 

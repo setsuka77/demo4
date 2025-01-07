@@ -1,55 +1,141 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="UTF-8">
-<title>カート|たべたべ</title>
-<link rel="stylesheet" href="/demo/css/common.css">
+	<meta charset="UTF-8">
+	<title>カート|たべたべ</title>
+	<link rel="stylesheet" href="/demo/css/common.css">
+	<link rel="stylesheet" href="/demo/css/product.css">
 </head>
+
 <body>
-<header th:replace="~{common/header :: header}"></header>
-	 <h1>カート</h1>
+	<header th:replace="~{common/header :: header}"></header>
+	<h1>カート</h1>
 
-    <!-- カートに商品がある場合 -->
-    <div th:if="${not #lists.isEmpty(orderSummaryList)}">
-        <table>
-            <thead>
-                <tr>
-                    <th>商品名</th>
-                    <th>数量</th>
-                    <th>単価</th>
-                    <th>合計金額</th>
-                    <th>画像</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="orderSummary : ${orderSummaryList}">
-                    <td th:text="${orderSummary.productName}"></td>
-                    <td th:text="${orderSummary.quantity}"></td>
-                    <td th:text="${orderSummary.unitPrice}"></td>
-                    <td th:text="${orderSummary.quantity * orderSummary.unitPrice}"></td>
-                    <td>
-                        <img th:src="@{/images/product/{imageName}(imageName=${orderSummary.ImageUrl})}" alt="商品画像" width="100">
-                    </td>
-                    <td>
-                        <button>削除</button>  <!-- 商品削除ボタンの実装 -->
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+	<!-- カートに商品がある場合 -->
+	<div th:if="${not #lists.isEmpty(cartList)}">
+		<form id="delete" th:action="@{/cart/cart}" method="post">
+			<div class="cart-item-container">
+				<!-- 商品ごとにブロックを作成 -->
+				<div th:each="cart : ${cartList}" class="cart-item">
+					<div class="cart-item-image">
+						<img th:src="@{/images/product/{imageName}(imageName=${cart.ImageUrl})}" alt="商品画像" width="100">
+					</div>
+					<div class="cart-item-details">
+						<p class="cart-item-name" th:text="${cart.productName}"></p>
+						<p class="price" th:text="${cart.unitPrice}" th:data-original-price="${cart.unitPrice}"> </p>
+						<div class="stepper">
+							<button type="button" class="decrement">ー</button>
+							<input type="number" th:value="${cart.quantity}" min="1" class="stepper-input" readonly>
+							<button type="button" class="increment">＋</button>
+						</div>
+						<a href="#" class="delete-link" th:data-product-id="${cart.productId}">削除</a>
+						<p class="cart-item-price">
+							小計:<span class="subtotal-price" th:text="${cart.quantity * cart.unitPrice}"></span>
+						</p>
+					</div>
+					<div class="cart-item-actions">
+						<!-- 在庫待ちメッセージ -->
+						<span th:if="${cart.isStockAvailable != true}" style="color: red;">在庫待ち</span>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
 
-    <!-- カートが空の場合 -->
-    <div th:if="${#lists.isEmpty(orderSummaryList)}">
-        <p>カートに商品がありません。</p>
-    </div>
+	<!-- カートが空の場合 -->
+	<div th:if="${#lists.isEmpty(cartList)}">
+		<p>カートに商品がありません。</p>
+	</div>
 
-    <!-- 合計金額などの情報 -->
-    <div>
-      
-        <button>注文を確定する</button>
-    </div>
+	<!-- 合計金額などの情報 -->
+	<div>
+		<button>注文を確定する</button>
+	</div>
+
+	<!-- 削除確認ダイアログ -->
+	<dialog class="dialog" id="confirmDialog" style="display:none;">
+		<div class="dialog-content">
+
+			<p>この商品を削除してもよろしいですか？</p>
+			<button type="button" id="deleteBtn" data-product-id="${cart.productId}">削除</button>
+			<button type="button" id="cancel">キャンセル</button>
+		</div>
+	</dialog>
+
+	<script>
+		// 削除リンクをクリックしたときにダイアログを表示
+		document.querySelectorAll('.delete-link').forEach(function (link) {
+			link.addEventListener('click', function (event) {
+				event.preventDefault(); // クリック時のデフォルト動作を防ぐ
+				
+				const productId = this.getAttribute('data-product-id');
+				var dialog = document.getElementById('confirmDialog');
+
+				// ダイアログを表示
+				dialog.style.display = 'block';
+
+				// 削除ボタンがクリックされたら、削除処理を実行
+				document.getElementById('deleteBtn').onclick = function () {
+					// フォームを送信して削除を実行
+					var form = document.getElementById('delete');
+					var input = document.createElement('input');
+					input.type = 'hidden';
+					input.name = 'productId';  // パラメータ名を指定
+					input.value = productId;  // 削除するカートのID
+					form.appendChild(input);
+					form.submit();  // フォームを送信
+				};
+
+				// キャンセルボタンがクリックされたら、ダイアログを閉じる
+				document.getElementById('cancel').onclick = function () {
+					dialog.style.display = 'none';  // ダイアログを非表示
+				};
+			});
+		});
 
 
+		// 小計や価格を通貨形式でフォーマット
+		const prices = document.querySelectorAll('.price, .subtotal-price');
+		prices.forEach(priceElement => {
+			const originalPrice = priceElement.textContent.trim();
+			const formattedPrice = new Intl.NumberFormat('ja-JP', {
+				style: 'currency',
+				currency: 'JPY'
+			}).format(originalPrice);
+			priceElement.textContent = formattedPrice;
+		});
+
+
+		// ステッパーのイベント処理
+		document.querySelectorAll('.stepper').forEach(stepper => {
+			const input = stepper.querySelector('.stepper-input');
+			const incrementButton = stepper.querySelector('.increment');
+			const decrementButton = stepper.querySelector('.decrement');
+
+			incrementButton.addEventListener('click', (event) => {
+				event.preventDefault(); // デフォルト動作を無効化
+				const max = parseInt(input.getAttribute('max')) || Infinity;
+				const step = parseInt(input.getAttribute('step')) || 1;
+				const value = parseInt(input.value) || 0;
+
+				if (value + step <= max) {
+					input.value = value + step;
+				}
+			});
+
+			decrementButton.addEventListener('click', (event) => {
+				event.preventDefault(); // デフォルト動作を無効化
+				const min = parseInt(input.getAttribute('min')) || 0;
+				const step = parseInt(input.getAttribute('step')) || 1;
+				const value = parseInt(input.value) || 0;
+
+				if (value - step >= min) {
+					input.value = value - step;
+				}
+			});
+		});
+	</script>
 </body>
+
 </html>

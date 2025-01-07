@@ -7,8 +7,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.example.demo.entity.Cart;
 import com.example.demo.entity.Goods;
-import com.example.demo.entity.OrderSummary;
 import com.example.demo.form.GoodForm;
 import com.example.demo.form.GoodsForm;
 import com.example.demo.mapper.GoodsMapper;
@@ -35,6 +35,7 @@ public class GuestService implements ItemRepository {
 		this.goodsMapper = goodsMapper;
 	}
 
+	//カートに追加(セッションで管理)
 	@Override
 	public int addCart(GoodsForm goodsForm, HttpSession session) {
 		// セッションからゲストのカートを取得または新規作成
@@ -43,7 +44,6 @@ public class GuestService implements ItemRepository {
 			cart = new HashMap<>();
 			session.setAttribute("guestCart", cart);
 		}
-		System.out.println("ゲスト" + goodsForm);
 
 		// GoodsFormから商品情報を取得し、カートに追加
 		for (GoodForm good : goodsForm.getGoodsFormList()) {
@@ -54,7 +54,6 @@ public class GuestService implements ItemRepository {
 				cart.put(productId, cart.getOrDefault(productId, 0) + quantity);
 			}
 		}
-		System.out.println("ゲストのほうに来てる");
 		// カート内の合計アイテム数を計算
 		int totalItems = 0;
 		totalItems = cart.values().stream().mapToInt(Integer::intValue).sum();
@@ -63,9 +62,10 @@ public class GuestService implements ItemRepository {
 		return totalItems;
 	}
 
+	//カート内一覧表示
 	@Override
-	public List<OrderSummary> getCart(HttpSession session) {
-		List<OrderSummary> orderSummaryList = new ArrayList<>();
+	public List<Cart> getCart(HttpSession session) {
+		List<Cart> cartList = new ArrayList<>();
 		Map<Integer, Integer> guestCart = (Map<Integer, Integer>) session.getAttribute("guestCart");
 
 		if (guestCart != null) {
@@ -77,17 +77,52 @@ public class GuestService implements ItemRepository {
 				Goods product = findProductById(products, productId);
 				if (product != null) {
 					Integer quantity = guestCart.get(productId);
-					OrderSummary orderSummary = new OrderSummary();
-					orderSummary.setProductId(productId);
-					orderSummary.setQuantity(quantity);
-					orderSummary.setUnitPrice(product.getPrice());
-					orderSummary.setProductName(product.getProductName());
-					orderSummary.setImageUrl(product.getImageUrl());
-					orderSummary.setUseFlag(true);
-					orderSummaryList.add(orderSummary);
+					Cart newItem = new Cart();
+					newItem.setProductId(productId);
+					newItem.setQuantity(quantity);
+					newItem.setUnitPrice(product.getPrice());
+					newItem.setProductName(product.getProductName());
+					newItem.setImageUrl(product.getImageUrl());
+					newItem.setIsStockAvailable(quantity <= product.getStockQuantity());
+					//セッションのリストに追加する
+					cartList.add(newItem);
 				}
 			}
 		}
-		return orderSummaryList;
+		return cartList;
 	}
+
+	//カート削除
+	@Override
+	public List<Cart> deleteItem(Integer id, HttpSession session) {
+		List<Cart> cartList = new ArrayList<>();
+		Map<Integer, Integer> guestCart = (Map<Integer, Integer>) session.getAttribute("guestCart");
+
+		if (guestCart != null) {
+			// 商品IDが一致するものを削除
+			if (guestCart.containsKey(id)) {
+				guestCart.remove(id); // 一致する商品IDを削除
+			}
+
+			// 削除後のカート情報を再取得
+			List<Integer> remainingProductIds = new ArrayList<>(guestCart.keySet());
+			if (!remainingProductIds.isEmpty()) {
+				// データベースから残りの商品の情報を取得
+				List<Goods> products = goodsMapper.getProductsByIds(remainingProductIds);
+				for (Goods product : products) {
+					Cart newItem = new Cart();
+					Integer quantity = guestCart.get(product.getProductId()); 
+					newItem.setProductId(product.getProductId());
+					newItem.setQuantity(quantity);
+					newItem.setUnitPrice(product.getPrice());
+					newItem.setProductName(product.getProductName());
+					newItem.setImageUrl(product.getImageUrl());
+					newItem.setIsStockAvailable(quantity <= product.getStockQuantity());
+					cartList.add(newItem); 
+				}
+			}
+		}
+		return cartList;
+	}
+
 }

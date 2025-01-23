@@ -17,5 +17,5 @@ public class GoodsDto {
 	private Integer categoryId;
 	
 	private Integer quantity;
-
+	private Integer stockQuantity;
 }

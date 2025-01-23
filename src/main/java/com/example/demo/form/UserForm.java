@@ -7,4 +7,5 @@ public class UserForm {
 	private String name;
 	private Integer id;
 	private String pass;
+	private String email;
 }

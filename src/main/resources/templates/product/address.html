@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>お届け先選択|たべたべ</title>
+	<link rel="stylesheet" href="/demo/css/common.css">
+	<link rel="stylesheet" href="/demo/css/product.css">
+</head>
+
+<body>
+	<header th:replace="~{common/header :: header}"></header>
+	<form th:action="@{/product/address}" method="post" class="addressForm">
+		<fieldset>
+			<legend>住所情報の入力</legend>
+
+			<div>
+				<!-- 既存住所リストをth:eachで繰り返して表示 -->
+				<div th:each="address : ${addressList}" class="address-item">
+					<label>
+						<div class="address-radio">
+							<!-- ラジオボタン、住所IDを値に設定 -->
+							<input type="radio" name="address_option" th:value="${address.addressId}"
+								onclick="toggleEditMode(); checkRadioSelection();">
+							<!-- 住所情報を囲む枠 -->
+							<div class="address-info">
+								<!-- 受取人名 -->
+								<h2 th:text="${address.recipientName}">受取人</h2>
+								<!-- 郵便番号 -->
+								<span th:text="${address.postalCode}">郵便番号</span><br>
+								<!-- 住所 -->
+								<span
+									th:text="${address.city + ' ' + address.addressLine1 + ' ' + address.addressLine2}"></span><br>
+								<!-- 電話番号 -->
+								<span th:text="${address.phoneNumber}">電話番号</span>
+							</div>
+						</div>
+					</label>
+				</div>
+
+
+				<label>
+					<input type="radio" name="address_option" value="0"
+						onclick="toggleEditMode(); checkRadioSelection();">
+					新規住所を登録
+				</label>
+
+				<!-- 新規住所の入力フォーム -->
+				<div id="new-address-form" class="address-form" style="display: none;">
+					<label for="recipientName">氏名:</label>
+					<input type="text" name="recipientName" id="recipientName"><br>
+					<label for="kana">カナ:</label>
+					<input type="text" name="kana" id="kana"><br>
+					<label for="phoneNumber">電話番号:</label>
+					<input type="text" name="phoneNumber" id="phoneNumber"><br>
+					<label for="postalCode">郵便番号:</label>
+					<input type="text" name="postalCode" id="postalCode"><br>
+					<label for="city">都道府県:</label>
+					<input type="text" name="city" id="city"><br>
+					<label for="addressLine1">市区町村:</label>
+					<input type="text" name="addressLine1" id="addressLine1"><br>
+					<label for="addressLine2">番地・マンション名:</label>
+					<input type="text" name="addressLine2" id="addressLine2"><br>
+					※正確なお届けのため部屋番号等のご記入もお願いします
+				</div>
+				<hr>
+
+				<button type="submit" class="nextPay" name="address" id="submitButton" disabled>お支払い選択へ</button>
+		</fieldset>
+	</form>
+
+	<!-- JavaScript -->
+	<script>
+		// ラジオボタンの選択で新規住所フォームを表示・非表示にする関数
+		function toggleEditMode() {
+			var newAddressRadio = document.querySelector('input[value="0"]:checked');
+			var newAddressForm = document.getElementById("new-address-form");
+
+			// 新規住所のラジオボタンが選択されていたらフォームを表示、それ以外は非表示
+			if (newAddressRadio) {
+				newAddressForm.style.display = "block";
+
+				// 必須フィールドに 'required' 属性を追加
+				var requiredFields = newAddressForm.querySelectorAll("input[type='text']");
+				requiredFields.forEach(function (input) {
+					input.setAttribute("required", "true");
+				});
+			} else {
+				newAddressForm.style.display = "none";
+
+				// 必須フィールドから 'required' 属性を削除
+				var requiredFields = newAddressForm.querySelectorAll("input[type='text']");
+				requiredFields.forEach(function (input) {
+					input.removeAttribute("required");
+				});
+			}
+		}
+
+		// ラジオボタンが選択されているかチェックし、ボタンを活性/非活性化する
+		function checkRadioSelection() {
+			var radioButtons = document.querySelectorAll('input[name="address_option"]');
+			var submitButton = document.getElementById("submitButton");
+
+			// ラジオボタンが選択されている場合はボタンを活性化、選択されていない場合は無効にする
+			var isSelected = Array.from(radioButtons).some(radio => radio.checked);
+			submitButton.disabled = !isSelected;
+		}
+
+
+		// ページ読み込み時にラジオボタンの状態をチェックして新規住所フォームを表示
+		window.onload = function () {
+			toggleEditMode(); // ページロード時に選択されたラジオボタンを確認
+			checkRadioSelection(); // ページ読み込み時にボタンの状態を更新
+		};
+	</script>
+
+</body>
+
+</html>

@@ -12,7 +12,7 @@
 		<img src="/demo/images/logo.png" class="logo">
 		</a>
 
-		<div class="right">
+		<div class="right" th:unless="${isLogin}">
 			<!-- ユーザー情報（ログイン済みの場合） -->
 			<div th:if="${user != null}">
 				<div th:object="${user}"  class="user">

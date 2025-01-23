@@ -4,14 +4,17 @@
 <meta charset="UTF-8">
 <title>ユーザー登録|たべたべ</title>
 <link rel="stylesheet" href="/demo/css/login.css">
+<link rel="stylesheet" href="/demo/css/common.css">
 </head>
 <body>
+	<header th:replace="~{common/header :: header}"></header>
 	<div class="login-container">
 		<h2>ユーザー登録画面</h2>
 		<form th:action="@{/login/record}" method="post">
 			<div class="logintext">
 				ユーザーID：<input type="text" id="id" name="id">
 				ユーザーname：<input type="text" id="name" name="name">
+				e-mail：<input type="text" id="email" name="email">
 				パスワード：<input type="password" id="pass" name="pass">
 			</div>
 			<button type="submit" name="record" >登録</button>

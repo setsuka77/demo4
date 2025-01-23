@@ -5,8 +5,22 @@
 
 	<select id="findProductById"
 		resultType="com.example.demo.dto.GoodsDto">
-		SELECT * FROM goods WHERE category_id = #{id}
+		SELECT
+		g.product_id,
+		g.product_name,
+		g.price,
+		g.description,
+		g.image_url,
+		g.category_id,
+		sm.stock_quantity
+		FROM
+		goods g
+		INNER JOIN
+		stock_management sm ON g.product_id = sm.product_id
+		WHERE
+		g.category_id = #{id}
 	</select>
+
 
 	<select id="getProductsByIds"
 		resultType="com.example.demo.entity.Goods">

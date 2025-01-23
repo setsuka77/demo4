@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.example.demo.mapper.ShoppingAddressesMapper">
+
+	<select id="getAddress"
+		resultType="com.example.demo.entity.Address">
+		SELECT *
+		FROM shopping_addresses
+		WHERE user_id = #{userId};
+	</select>
+
+	<insert id="insert"
+		parameterType="com.example.demo.entity.Address"
+		useGeneratedKeys="true" keyProperty="addressId">
+		INSERT INTO shopping_addresses
+		(user_id, recipient_name, kana, postal_code, city, address_line1,
+		address_line2, phone_number)
+		VALUES
+		(#{userId}, #{recipientName}, #{kana}, #{postalCode}, #{city}, #{addressLine1},
+		#{addressLine2}, #{phoneNumber});
+	</insert>
+
+
+
+</mapper>

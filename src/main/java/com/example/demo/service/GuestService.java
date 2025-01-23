@@ -1,12 +1,11 @@
 package com.example.demo.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.example.demo.dto.CartDto;
 import com.example.demo.entity.Cart;
 import com.example.demo.entity.Goods;
 import com.example.demo.form.GoodForm;
@@ -38,90 +37,99 @@ public class GuestService implements ItemRepository {
 	//カートに追加(セッションで管理)
 	@Override
 	public int addCart(GoodsForm goodsForm, HttpSession session) {
+		System.out.println(goodsForm);
 		// セッションからゲストのカートを取得または新規作成
-		Map<Integer, Integer> cart = (Map<Integer, Integer>) session.getAttribute("guestCart");
-		if (cart == null) {
-			cart = new HashMap<>();
-			session.setAttribute("guestCart", cart);
+		List<Cart> cartList = (List<Cart>) session.getAttribute("guestCart");
+		if (cartList == null) {
+			cartList = new ArrayList<>();
+			session.setAttribute("guestCart", cartList);
 		}
 
 		// GoodsFormから商品情報を取得し、カートに追加
 		for (GoodForm good : goodsForm.getGoodsFormList()) {
-			Integer productId = good.getProductId();
 			Integer quantity = good.getQuantity();
 			if (quantity != null && quantity > 0) {
-				// カートに商品を追加
-				cart.put(productId, cart.getOrDefault(productId, 0) + quantity);
+				// 既にカートに同じ商品IDが存在するかチェック
+				Cart existingCartItem = cartList.stream()
+						.filter(cart -> cart.getProductId().equals(good.getProductId()))
+						.findFirst()
+						.orElse(null); // 一致する商品がない場合はnull
+
+				if (existingCartItem != null) {
+					// 既存のカートアイテムがあれば、その数量を加算
+					existingCartItem.setQuantity(existingCartItem.getQuantity() + quantity);
+				} else {
+					// 新しい商品をカートに追加
+					Cart newItem = new Cart();
+					newItem.setProductId(good.getProductId());
+					newItem.setQuantity(quantity);
+					newItem.setUnitPrice(good.getPrice());
+					newItem.setProductName(good.getProductName());
+					newItem.setImageUrl(good.getImageUrl());
+					newItem.setIsStockAvailable(good.getQuantity() <= good.getStockQuantity()); // 仮に商品数がquantityより多ければ在庫あり
+				
+					// カートに商品を追加
+					cartList.add(newItem); // 追加順にリストに追加
+				}
 			}
 		}
 		// カート内の合計アイテム数を計算
-		int totalItems = 0;
-		totalItems = cart.values().stream().mapToInt(Integer::intValue).sum();
+		int totalItems = cartList.stream().mapToInt(Cart::getQuantity).sum();
 
 		// 合計アイテム数を返す
 		return totalItems;
 	}
 
-	//カート内一覧表示
+	// カート内一覧表示
 	@Override
 	public List<Cart> getCart(HttpSession session) {
-		List<Cart> cartList = new ArrayList<>();
-		Map<Integer, Integer> guestCart = (Map<Integer, Integer>) session.getAttribute("guestCart");
-
-		if (guestCart != null) {
-			List<Integer> productIds = new ArrayList<>(guestCart.keySet());
-			// 商品情報をデータベースから取得
-			List<Goods> products = goodsMapper.getProductsByIds(productIds);
-
-			for (Integer productId : productIds) {
-				Goods product = findProductById(products, productId);
-				if (product != null) {
-					Integer quantity = guestCart.get(productId);
-					Cart newItem = new Cart();
-					newItem.setProductId(productId);
-					newItem.setQuantity(quantity);
-					newItem.setUnitPrice(product.getPrice());
-					newItem.setProductName(product.getProductName());
-					newItem.setImageUrl(product.getImageUrl());
-					newItem.setIsStockAvailable(quantity <= product.getStockQuantity());
-					//セッションのリストに追加する
-					cartList.add(newItem);
-				}
-			}
+		List<Cart> cartList = (List<Cart>) session.getAttribute("guestCart");
+		if (cartList == null) {
+			cartList = new ArrayList<>();
 		}
-		return cartList;
+		return cartList; // 追加順にリストを返す
 	}
 
 	//カート削除
 	@Override
 	public List<Cart> deleteItem(Integer id, HttpSession session) {
-		List<Cart> cartList = new ArrayList<>();
-		Map<Integer, Integer> guestCart = (Map<Integer, Integer>) session.getAttribute("guestCart");
-
-		if (guestCart != null) {
-			// 商品IDが一致するものを削除
-			if (guestCart.containsKey(id)) {
-				guestCart.remove(id); // 一致する商品IDを削除
-			}
-
-			// 削除後のカート情報を再取得
-			List<Integer> remainingProductIds = new ArrayList<>(guestCart.keySet());
-			if (!remainingProductIds.isEmpty()) {
-				// データベースから残りの商品の情報を取得
-				List<Goods> products = goodsMapper.getProductsByIds(remainingProductIds);
-				for (Goods product : products) {
-					Cart newItem = new Cart();
-					Integer quantity = guestCart.get(product.getProductId()); 
-					newItem.setProductId(product.getProductId());
-					newItem.setQuantity(quantity);
-					newItem.setUnitPrice(product.getPrice());
-					newItem.setProductName(product.getProductName());
-					newItem.setImageUrl(product.getImageUrl());
-					newItem.setIsStockAvailable(quantity <= product.getStockQuantity());
-					cartList.add(newItem); 
-				}
-			}
+		List<Cart> cartList = (List<Cart>) session.getAttribute("guestCart");
+		if (cartList != null) {
+			cartList.removeIf(cart -> cart.getProductId().equals(id)); // 商品IDで削除
 		}
+
+		// カート内の合計アイテム数を再計算
+		int totalItems = cartList.stream().mapToInt(Cart::getQuantity).sum();
+		session.setAttribute("totalItems", totalItems); // 合計アイテム数をセッションに保存
+
+		return cartList;
+	}
+
+	
+	//数量変更
+	@Override
+	public List<Cart> updateItemQuantity(CartDto cartDto, HttpSession session) {
+		List<Cart> cartList = (List<Cart>) session.getAttribute("guestCart");
+
+		if (cartList == null) {
+			return new ArrayList<>(); // カートが空または存在しない場合は空のリストを返す
+		}
+
+		// 商品IDと新しい数量を取得
+		Integer productId = cartDto.getProductId();
+		Integer newQuantity = cartDto.getQuantity();
+
+		// 商品を探して数量を更新（Optionalとstreamを使用）
+		cartList.stream()
+				.filter(cart -> cart.getProductId().equals(productId))
+				.findFirst() // 最初に一致する商品を探す
+				.ifPresent(cart -> cart.setQuantity(newQuantity)); // 商品が見つかったら数量を更新
+
+		// カート内の合計アイテム数を再計算
+		int totalItems = cartList.stream().mapToInt(Cart::getQuantity).sum();
+		session.setAttribute("totalItems", totalItems); // 合計アイテム数をセッションに保存
+
+		// 更新されたカート情報を返す
 		return cartList;
 	}
 

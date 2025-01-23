@@ -33,6 +33,7 @@ public class ItemController {
 			goodForm.setImageUrl(goods.getImageUrl());
 			goodForm.setCategoryId(goods.getCategoryId());
 			goodForm.setQuantity(goods.getQuantity() != null ? goods.getQuantity() : 0);//デフォルメでは0に設定
+			goodForm.setStockQuantity(goods.getStockQuantity());
 			goodFormList.add(goodForm);
 		}
 		return goodFormList;
@@ -59,6 +60,7 @@ public class ItemController {
 
 		//商品情報取得
 		GoodsForm goodsForm = new GoodsForm();
+		//カテゴリーIDで検索
 		List<GoodsDto> pro = goodsMapper.findProductById(id);
 		goodsForm.setGoodsFormList(convertToGoodFormList(pro));
 		model.addAttribute("goodsForm", goodsForm);
@@ -67,7 +69,7 @@ public class ItemController {
 
 		Integer totalItems = (Integer) session.getAttribute("totalItems");
 		model.addAttribute("totalItems", totalItems);
-
+		
 		return "category/branch";
 	}
 

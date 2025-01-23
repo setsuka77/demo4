@@ -11,8 +11,8 @@
 	</select>
 	
 	<insert id="insert" parameterType="com.example.demo.entity.Users">
-	INSERT INTO users(id,name,pass)
-	VALUES(#{id},#{name},#{pass})
+	INSERT INTO users(id,name,pass,email)
+	VALUES(#{id},#{name},#{pass},#{email})
 	</insert>
 
 </mapper>

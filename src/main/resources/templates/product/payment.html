@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+	<title>支払い選択 | たべたべ</title>
+	<link rel="stylesheet" href="/demo/css/common.css">
+	<link rel="stylesheet" href="/demo/css/product.css">
+</head>
+
+<body>
+	<header th:replace="~{common/header :: header}"></header>
+
+	<form th:action="@{/product/payment}" method="post" class="paymentContent">
+		<fieldset>
+			<legend>支払い方法の選択</legend>
+
+			<div>
+				<h2>■支払い方法</h2>
+				<!-- 支払い方法の選択肢 -->
+				<div class="pay">
+					<label>
+						<input type="radio" name="payment_method" value="0" onclick="togglePaymentForm(); checkRadioSelection();">
+						銀行振込
+					</label>
+				</div>
+				<div id="form-0" class="payment-form" style="display: none;">
+					※お振込み手数料はご自身でご負担いただけますようお願いいたします。
+				</div>
+
+
+				<div class="pay">
+					<label>
+						<input type="radio" name="payment_method" value="1" onclick="togglePaymentForm(); checkRadioSelection();">
+						クレジットカード決済
+					</label>
+				</div>
+				<div id="form-1" class="payment-form" style="display: none;">
+					<label for="card_number">カード番号:</label>
+					<input type="text" name="card_number" id="card_number"><br>
+					<label for="expiry_date">有効期限:</label>
+					<!-- 月の選択肢 -->
+					<select name="expiry_month" id="expiry_month">
+						<option value="" disabled selected>-</option>
+						<option value="1">01</option>
+						<option value="2">02</option>
+						<option value="3">03</option>
+						<option value="4">04</option>
+						<option value="5">05</option>
+						<option value="6">06</option>
+						<option value="7">07</option>
+						<option value="8">08</option>
+						<option value="9">09</option>
+						<option value="10">10</option>
+						<option value="11">11</option>
+						<option value="12">12</option>
+					</select>
+					月
+					<!-- 年の選択肢 -->
+					<select name="expiry_year" id="expiry_year">
+						<option value="" disabled selected>-</option>
+					</select>
+					年
+					<label for="cvv">CVV:</label>
+					<input type="text" name="cvv" id="cvv"><br>
+				</div>
+
+				<div class="pay">
+					<label>
+						<input type="radio" name="payment_method" value="2" onclick="togglePaymentForm(); checkRadioSelection();">
+						コンビニ決済
+					</label>
+				</div>
+				<div class="pay">
+					<label>
+						<input type="radio" name="payment_method" value="3" onclick="togglePaymentForm(); checkRadioSelection();">
+						PayPay
+					</label>
+				</div>
+				<div class="pay">
+					<label>
+						<input type="radio" name="payment_method" value="4" onclick="togglePaymentForm(); checkRadioSelection();">
+						後払い
+					</label>
+				</div>
+				<div id="form-4" class="payment-form" style="display: none;">
+					<label for="billing_address">請求先住所:</label>
+					<input type="text" name="billing_address" id="billing_address"><br>
+					<label for="billing_phone">請求先電話番号:</label>
+					<input type="text" name="billing_phone" id="billing_phone"><br>
+					<label for="billing_name">請求先氏名:</label>
+					<input type="text" name="billing_name" id="billing_name"><br>
+				</div>
+
+				<div class="pay">
+					<label>
+						<input type="radio" name="payment_method" value="5" onclick="togglePaymentForm(); checkRadioSelection();">
+						代金引換
+					</label>
+				</div>
+			</div>
+
+			<hr>
+		
+			<button type="submit" name="pay" class="nextPay" id="submitButton" disabled>次へ</button>
+		</fieldset>
+	</form>
+
+	<script>
+		// ラジオボタンが選択されているかチェックし、ボタンを活性/非活性化する
+		function checkRadioSelection() {
+			var radioButtons = document.querySelectorAll('input[name="payment_method"]');
+			var submitButton = document.getElementById("submitButton");
+
+			// ラジオボタンが選択されている場合はボタンを活性化、選択されていない場合は無効にする
+			var isSelected = Array.from(radioButtons).some(radio => radio.checked);
+			submitButton.disabled = !isSelected;
+		}
+		
+		// 年の選択肢を動的に追加
+		const currentYear = new Date().getFullYear();
+		const expiryYearSelect = document.getElementById('expiry_year');
+		for (let i = currentYear; i < currentYear + 6; i++) {
+			let option = document.createElement('option');
+			option.value = i;
+			option.text = i;
+			expiryYearSelect.appendChild(option);
+		}
+
+		// ラジオボタンで選択した支払い方法に応じてフォームを表示・非表示にする
+		function togglePaymentForm() {
+			// すべての支払いフォームを非表示にする
+			var allForms = document.querySelectorAll('.payment-form');
+			allForms.forEach(function (form) {
+				form.style.display = 'none';
+			});
+
+			// 選択された支払い方法に対応するフォームを表示
+			var selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+			if (selectedPaymentMethod) {
+				var formId = 'form-' + selectedPaymentMethod.value; // value と一致する id を取得
+				var selectedForm = document.getElementById(formId);
+				if (selectedForm) {
+					selectedForm.style.display = 'block';
+				}
+			}
+		}
+
+		// ページ読み込み時に初期状態をチェックしてフォームを表示
+		window.onload = function () {
+			togglePaymentForm(); // ページロード時に選択されたラジオボタンを確認
+		};
+	</script>
+
+</body>
+
+</html>

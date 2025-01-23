@@ -1,13 +1,14 @@
 package com.example.demo.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.dto.CartDto;
 import com.example.demo.entity.Cart;
 import com.example.demo.entity.Goods;
 import com.example.demo.entity.Users;
@@ -27,16 +28,6 @@ public class UsersService implements ItemRepository {
 	private final GoodsMapper goodsMapper;
 	private final CartMapper cartMapper;
 
-	// 商品IDを指定して、商品をリストから探すメソッド
-	private Goods findProductById(List<Goods> products, Integer productId) {
-		for (Goods product : products) {
-			if (product.getProductId().equals(productId)) { // 商品IDが一致すれば
-				return product;
-			}
-		}
-		return null; // 商品が見つからなければnullを返す
-	}
-
 	//リストに商品があるとき更新
 	private void updateCartQuantity(Cart existingItem, int quantityToAdd) {
 		existingItem.setQuantity(existingItem.getQuantity() + quantityToAdd);
@@ -50,6 +41,7 @@ public class UsersService implements ItemRepository {
 		newItem.setUnitPrice(submit.getPrice());
 		newItem.setQuantity(submit.getQuantity());
 		newItem.setUserId(userId);
+		
 		cartMapper.addCart(newItem); // カートに新規追加
 	}
 
@@ -95,65 +87,11 @@ public class UsersService implements ItemRepository {
 
 	//カート情報を表示
 	@Override
-	@Transactional
 	public List<Cart> getCart(HttpSession session) {
 		// ユーザー情報の取得
 		Users loginUser = (Users) session.getAttribute("user");
 		Integer userId = loginUser.getId();
 
-		//セッションからカート情報を取得する
-		Map<Integer, Integer> cart = (Map<Integer, Integer>) session.getAttribute("guestCart");
-		if (cart != null) {
-			// cartからproductIdを取り出してリストにする
-			List<Integer> productIds = new ArrayList<>(cart.keySet());
-			// 商品情報をデータベースから取得
-			List<Goods> products = goodsMapper.getProductsByIds(productIds);
-
-			//既存カート情報を取得
-			List<Cart> existingCart = cartMapper.cartCheck(userId);
-			Map<Integer, Cart> existingCartMap = existingCart.stream()
-					.collect(Collectors.toMap(Cart::getProductId, item -> item));
-
-			// 新規アイテムを格納するリストと更新リスト
-			List<Cart> itemsToUpdate = new ArrayList<>();
-			List<Cart> itemsToInsert = new ArrayList<>();
-
-			for (Map.Entry<Integer, Integer> entry : cart.entrySet()) {
-				Integer productId = entry.getKey();
-				Integer quantity = entry.getValue();
-				Goods product = findProductById(products, productId);
-
-				if (product != null) {
-					// DBにアイテムが存在するか確認
-					Cart existingItem = existingCartMap.get(productId);
-
-					if (existingItem != null) {
-						// 既存アイテムがあれば、数量を更新するリストに追加
-						existingItem.setQuantity(existingItem.getQuantity() + quantity);
-						itemsToUpdate.add(existingItem);
-					} else {
-						// 新規アイテムの場合、挿入リストに追加
-						Cart newItem = new Cart();
-						newItem.setProductId(productId);
-						newItem.setQuantity(quantity);
-						newItem.setUnitPrice(product.getPrice());
-						newItem.setUserId(userId);
-						itemsToInsert.add(newItem);
-					}
-				}
-			}
-
-			// 一件ずつ更新を行う
-			for (Cart itemToUpdate : itemsToUpdate) {
-				cartMapper.updateCart(itemToUpdate); 
-			}
-			// 一件ずつ挿入を行う
-			for (Cart itemToInsert : itemsToInsert) {
-				cartMapper.addCart(itemToInsert); 
-			}
-			// セッションからゲストカートを削除
-			session.removeAttribute("guestCart");
-		}
 		return cartMapper.cartCheck(userId); // 最終的にユーザーのカート情報を返す
 	}
 
@@ -165,8 +103,83 @@ public class UsersService implements ItemRepository {
 		Users loginUser = (Users) session.getAttribute("user");
 		Integer userId = loginUser.getId();
 		//DB物理削除
-		cartMapper.deleteCart(userId,id);
+		cartMapper.deleteCart(userId, id);
+		//トータル数更新
+		Integer totalItems = cartMapper.getTotalItemsForUser(userId);
+		session.setAttribute("totalItems", totalItems);
+
+		return cartMapper.cartCheck(userId); // 最終的にユーザーのカート情報を返す
+	}
+
+	//セッションからカート情報を取得して保存
+	@Transactional
+	public Integer saveCart(Integer userId, HttpSession session) {
+		List<Cart> cartList = (List<Cart>) session.getAttribute("guestCart");
+
+		if (cartList != null) {
+			// 商品IDのリストを作成
+			List<Integer> productIds = cartList.stream()
+					.map(Cart::getProductId)
+					.collect(Collectors.toList());
+
+			// 商品情報を一括取得しマップ化
+			Map<Integer, Goods> productMap = goodsMapper.getProductsByIds(productIds).stream()
+					.collect(Collectors.toMap(Goods::getProductId, Function.identity()));
+
+			// 既存カートをマップ化
+			Map<Integer, Cart> existingCartMap = cartMapper.cartCheck(userId).stream()
+					.collect(Collectors.toMap(Cart::getProductId, Function.identity()));
+
+			// カートアイテムの処理
+			cartList.forEach(cartItem -> {
+				Integer productId = cartItem.getProductId();
+				Integer quantity = cartItem.getQuantity();
+				Goods product = productMap.get(productId);
+
+				if (product != null) {
+					Cart existingItem = existingCartMap.get(productId);
+
+					if (existingItem != null) {
+						// 既存アイテムがあれば数量を更新
+						existingItem.setQuantity(existingItem.getQuantity() + quantity);
+						cartMapper.updateCart(existingItem);
+					} else {
+						// 新規アイテムを挿入
+						Cart newItem = new Cart();
+						newItem.setProductId(productId);
+						newItem.setQuantity(quantity);
+						newItem.setUnitPrice(product.getPrice());
+						newItem.setUserId(userId);
+						cartMapper.addCart(newItem);
+					}
+				}
+			});
+
+			// セッションからゲストカートを削除
+			session.removeAttribute("guestCart");
+		}
+
+		// ユーザーのカートに入っている商品数を返す
+		return cartMapper.getTotalItemsForUser(userId);
+	}
+
+	
+	//数量変更
+	@Transactional
+	@Override
+	public List<Cart> updateItemQuantity(CartDto cartDto, HttpSession session) {
+		// ユーザー情報の取得
+		Users loginUser = (Users) session.getAttribute("user");
+		Integer userId = loginUser.getId();
+		//商品IDと数量を取得、更新
+		Integer productId = cartDto.getProductId();
+		Integer quantity = cartDto.getQuantity();
+		cartMapper.updateQuantity(productId,quantity,userId);
 		
+		//トータル数更新
+		Integer totalItems = cartMapper.getTotalItemsForUser(userId);
+		session.setAttribute("totalItems", totalItems);
+
 		return cartMapper.cartCheck(userId); // 最終的にユーザーのカート情報を返す
 	}
 

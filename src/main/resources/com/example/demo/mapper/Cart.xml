@@ -59,9 +59,19 @@
 
 	<delete id="deleteCart" parameterType="map">
 		DELETE FROM cart
-		WHERE user_id = #{userId}
+		WHERE
+		user_id = #{userId}
 		AND product_id = #{productId}
 	</delete>
+
+
+	<update id="updateQuantity"
+		parameterType="com.example.demo.dto.CartDto">
+		UPDATE cart
+		SET quantity = #{quantity}
+		WHERE product_id = #{productId} AND user_id = #{userId}
+	</update>
+
 
 
 </mapper>

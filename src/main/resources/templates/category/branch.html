@@ -30,8 +30,11 @@
 					<p class="price" th:text="${goodForm.price}" th:data-original-price="${goodForm.price}"></p>
 					<!-- productIdを隠しフィールドとして送信 -->
 					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].price}" />
+					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].imageUrl}" />
 					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].productId}" />
+					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].productName}" />
 					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].categoryId}" />
+					<input type="hidden" th:field="*{goodsFormList[__${iterStat.index}__].stockQuantity}" />
 					<!-- quantity入力欄とステッパーボタン -->
 					<div class="stepper">
 						<button type="button" class="decrement">ー</button>

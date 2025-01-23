@@ -5,9 +5,11 @@
 	<meta charset="UTF-8">
 	<title>ログイン|たべたべ</title>
 	<link rel="stylesheet" href="/demo/css/login.css">
+	<link rel="stylesheet" href="/demo/css/common.css">
 </head>
 
 <body>
+	<header th:replace="~{common/header :: header}"></header>
 	<div class="login-container">
 		<h2>ログイン画面</h2>
 		<form th:action="@{/login/login}" method="post">

@@ -6,6 +6,7 @@
 	<title>カート|たべたべ</title>
 	<link rel="stylesheet" href="/demo/css/common.css">
 	<link rel="stylesheet" href="/demo/css/product.css">
+	<script src="/demo/js/cart.js" defer></script>
 </head>
 
 <body>
@@ -14,14 +15,15 @@
 
 	<!-- カートに商品がある場合 -->
 	<div th:if="${not #lists.isEmpty(cartList)}">
-		<form id="delete" th:action="@{/cart/cart}" method="post">
+		<form id="cart" th:action="@{/cart/cart}" method="post">
 			<div class="cart-item-container">
 				<!-- 商品ごとにブロックを作成 -->
-				<div th:each="cart : ${cartList}" class="cart-item">
+				<div th:each="cart : ${cartList}" class="cart-item" th:data-product-id="${cart.productId}">
 					<div class="cart-item-image">
 						<img th:src="@{/images/product/{imageName}(imageName=${cart.ImageUrl})}" alt="商品画像" width="100">
 					</div>
 					<div class="cart-item-details">
+
 						<p class="cart-item-name" th:text="${cart.productName}"></p>
 						<p class="price" th:text="${cart.unitPrice}" th:data-original-price="${cart.unitPrice}"> </p>
 						<div class="stepper">
@@ -39,19 +41,67 @@
 						<span th:if="${cart.isStockAvailable != true}" style="color: red;">在庫待ち</span>
 					</div>
 				</div>
+				<hr>
+
+				<!-- 合計金額などの情報 -->
+				<div class="order">
+					<div class="order-row">
+						<span>注文内容</span>
+						<span id="totalNumber" th:text="${totalItems} + '件'"></span>
+					</div>
+
+					<hr>
+					<div class="order-row">
+						<span>商品合計</span>
+						<span id="totalAmount">￥X,XXX</span>
+					</div>
+					<div class="order-row">
+						<span>送料</span>
+						<span>￥未定</span>
+					</div>
+
+					<!-- クーポン入力フォーム -->
+					<div class="coupon-form">
+						<span id="couponLabel">クーポン</span>
+						<div class="coupon-input">
+							<input type="text" id="couponCodeInput" name="couponCode" placeholder="クーポンコードを入力">
+							<button type="button" name="action" value="applyCoupon">適用</button>
+						</div>
+					</div>
+
+					<!-- 割引情報表示エリア -->
+					<div class="discount-info"></div>
+
+					<!-- 割引額表示用の行（最初は非表示） -->
+					<div id="discountRow" class="order-row" style="display:none;">
+						<span>割引</span>
+						<span id="discount">
+							<span id="discountText"></span>
+							<a href="#" id="removeDiscount"
+								style="margin-left: 10px; color: rgb(0, 128, 255); text-decoration: underline;">削除</a>
+						</span>
+					</div>
+
+
+					<hr>
+					<div class="order-row">
+						<span>合計</span>
+						<span id="totalWithDiscount">￥0</span>
+					</div>
+				</div>
+
+
+				<button type="submit" name="confirm" class="product">購入手続きへ進む</button>
+
 			</div>
 		</form>
 	</div>
 
 	<!-- カートが空の場合 -->
-	<div th:if="${#lists.isEmpty(cartList)}">
+	<div th:if="${#lists.isEmpty(cartList)}" class="cartNone">
 		<p>カートに商品がありません。</p>
 	</div>
 
-	<!-- 合計金額などの情報 -->
-	<div>
-		<button>注文を確定する</button>
-	</div>
 
 	<!-- 削除確認ダイアログ -->
 	<dialog class="dialog" id="confirmDialog" style="display:none;">
@@ -63,79 +113,6 @@
 		</div>
 	</dialog>
 
-	<script>
-		// 削除リンクをクリックしたときにダイアログを表示
-		document.querySelectorAll('.delete-link').forEach(function (link) {
-			link.addEventListener('click', function (event) {
-				event.preventDefault(); // クリック時のデフォルト動作を防ぐ
-				
-				const productId = this.getAttribute('data-product-id');
-				var dialog = document.getElementById('confirmDialog');
-
-				// ダイアログを表示
-				dialog.style.display = 'block';
-
-				// 削除ボタンがクリックされたら、削除処理を実行
-				document.getElementById('deleteBtn').onclick = function () {
-					// フォームを送信して削除を実行
-					var form = document.getElementById('delete');
-					var input = document.createElement('input');
-					input.type = 'hidden';
-					input.name = 'productId';  // パラメータ名を指定
-					input.value = productId;  // 削除するカートのID
-					form.appendChild(input);
-					form.submit();  // フォームを送信
-				};
-
-				// キャンセルボタンがクリックされたら、ダイアログを閉じる
-				document.getElementById('cancel').onclick = function () {
-					dialog.style.display = 'none';  // ダイアログを非表示
-				};
-			});
-		});
-
-
-		// 小計や価格を通貨形式でフォーマット
-		const prices = document.querySelectorAll('.price, .subtotal-price');
-		prices.forEach(priceElement => {
-			const originalPrice = priceElement.textContent.trim();
-			const formattedPrice = new Intl.NumberFormat('ja-JP', {
-				style: 'currency',
-				currency: 'JPY'
-			}).format(originalPrice);
-			priceElement.textContent = formattedPrice;
-		});
-
-
-		// ステッパーのイベント処理
-		document.querySelectorAll('.stepper').forEach(stepper => {
-			const input = stepper.querySelector('.stepper-input');
-			const incrementButton = stepper.querySelector('.increment');
-			const decrementButton = stepper.querySelector('.decrement');
-
-			incrementButton.addEventListener('click', (event) => {
-				event.preventDefault(); // デフォルト動作を無効化
-				const max = parseInt(input.getAttribute('max')) || Infinity;
-				const step = parseInt(input.getAttribute('step')) || 1;
-				const value = parseInt(input.value) || 0;
-
-				if (value + step <= max) {
-					input.value = value + step;
-				}
-			});
-
-			decrementButton.addEventListener('click', (event) => {
-				event.preventDefault(); // デフォルト動作を無効化
-				const min = parseInt(input.getAttribute('min')) || 0;
-				const step = parseInt(input.getAttribute('step')) || 1;
-				const value = parseInt(input.value) || 0;
-
-				if (value - step >= min) {
-					input.value = value - step;
-				}
-			});
-		});
-	</script>
 </body>
 
 </html>

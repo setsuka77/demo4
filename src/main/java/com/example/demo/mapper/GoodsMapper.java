@@ -10,11 +10,9 @@ import com.example.demo.entity.Goods;
 
 @Mapper
 public interface GoodsMapper {
-	
+	//カテゴリーIDによる商品情報取得
 	List<GoodsDto> findProductById(@Param("id") Integer id);
-
+	//商品IDによる商品情報取得
 	List<Goods> getProductsByIds(List<Integer> productIds);
 	
-	
-
 }

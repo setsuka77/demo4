@@ -15,7 +15,5 @@ public class Goods {
 	private Timestamp updatedAt;
 	private String imageUrl;
 	private Integer categoryId;
-	
-	private Integer stockQuantity;
 
 }
